@@ -3,10 +3,9 @@ if (
         get(ENV, "APPVEYOR", "") == "true" ||
         get(ENV, "CI", "") == "true"
     )
-    
-    Pkg.clone("GPUArrays")
-    Pkg.checkout("GPUArrays", "sd/abstractgpu")
 
+    Pkg.checkout("GPUArrays", "sd/abstractgpu")
+    Pkg.checkout("CUDAnative", "sd/iteration")
 end
 
 # Pkg.test runs with --check_bounds=1, forcing all bounds checks.
