@@ -1,3 +1,5 @@
+# TODO transition CUFFT to CUDAdrv
+
 import CUFFT, CUDArt
 
 function to_cudart(A::CuArray)

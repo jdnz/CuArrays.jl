@@ -139,6 +139,16 @@ end
 
 @inline synchronize_threads(::CUKernelState) = CUDAnative.sync_threads()
 
+
+"""
+Blocks until all operations are finished on `A`
+"""
+function GPUArrays.synchronize(A::CuArray)
+    # fallback is a noop, for backends not needing synchronization. This
+    # makes it easier to write generic code that also works for AbstractArrays
+    CUDAdrv.synchronize(CUDAnative.default_context[])
+end
+
 for (i, sym) in enumerate((:x, :y, :z))
     for (f, fcu) in (
             (:blockidx, :blockIdx),

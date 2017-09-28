@@ -26,18 +26,15 @@ using CuArrays
 using Base.Test, GPUArrays.TestSuite
 using GPUArrays: JLArray
 @testset "Device: $(CUDAnative.default_device[])" begin
-    TestSuite.run_tests(CuArray)
+    Typ = CuArray
+    GPUArrays.allowslow(false)
+    TestSuite.run_gpuinterface(Typ)
+    TestSuite.run_base(Typ)
+    TestSuite.run_blas(Typ)
+    TestSuite.run_broadcasting(Typ)
+    TestSuite.run_construction(Typ)
+    # TestSuite.run_fft(Typ)
+    TestSuite.run_linalg(Typ)
+    TestSuite.run_mapreduce(Typ)
+    TestSuite.run_indexing(Typ)
 end
-
-# The above is equal to:
-# Typ = CuArray
-# GPUArrays.allowslow(false)
-# TestSuite.run_gpuinterface(Typ)
-# TestSuite.run_base(Typ)
-# TestSuite.run_blas(Typ)
-# TestSuite.run_broadcasting(Typ)
-# TestSuite.run_construction(Typ)
-# TestSuite.run_fft(Typ)
-# TestSuite.run_linalg(Typ)
-# TestSuite.run_mapreduce(Typ)
-# TestSuite.run_indexing(Typ)
