@@ -1,6 +1,7 @@
 julia 0.6
-CUDAnative 0.5
+CUDAnative 0.5.1 # for iteration of device array
 CUDAdrv 0.5
 CUBLAS 0.2.2
 CUDNN 0.4.0
 NNlib
+GPUArrays 0.2.0

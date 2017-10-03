@@ -1,13 +1,3 @@
-if (
-        get(ENV, "TRAVIS", "") == "true" ||
-        get(ENV, "APPVEYOR", "") == "true" ||
-        get(ENV, "CI", "") == "true"
-    )
-
-    Pkg.checkout("GPUArrays", "sd/abstractgpu")
-    Pkg.checkout("CUDAnative", "sd/iteration")
-end
-
 # Pkg.test runs with --check_bounds=1, forcing all bounds checks.
 # This is incompatible with CUDAnative (see JuliaGPU/CUDAnative.jl#98)
 if Base.JLOptions().check_bounds == 1
