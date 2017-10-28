@@ -13,6 +13,10 @@ CublasArray{T<:CublasFloat} = CuArray{T}
 Base.scale!(x::CuArray{T}, k::Number) where T<:CublasFloat =
   scal!(length(x), convert(eltype(x), k), x, 1)
 
+# Work around ambiguity with GPUArrays wrapper
+Base.scale!(x::CuArray{T}, k::Real) where T<:CublasFloat =
+  invoke(scale!, (typeof(x), Number), x, k)
+
 function Base.BLAS.dot(DX::CuArray{T}, DY::CuArray{T}) where T<:Union{Float32,Float64}
     n = length(DX)
     n==length(DY) || throw(DimensionMismatch("dot product arguments have lengths $(length(DX)) and $(length(DY))"))
@@ -121,6 +125,10 @@ A_mul_Bt!(C::CuMatrix, A::CuMatrix, B::CuMatrix) = gemm_wrapper!(C, 'N', 'T', A,
 At_mul_Bt!(C::CuMatrix, A::CuMatrix, B::CuMatrix) = gemm_wrapper!(C, 'T', 'T', A, B)
 Ac_mul_B!(C::CuMatrix{T}, A::CuMatrix{T}, B::CuMatrix{T}) where T<:CublasReal = At_mul_B!(C, A, B)
 Ac_mul_B!(C::CuMatrix, A::CuMatrix, B::CuMatrix) = gemm_wrapper!(C, 'C', 'N', A, B)
+A_mul_Bc!(C::CuMatrix{T}, A::CuMatrix{T}, B::CuMatrix{T}) where T<:CublasReal = A_mul_Bt!(C, A, B)
+A_mul_Bc!(C::CuMatrix, A::CuMatrix, B::CuMatrix) = gemm_wrapper!(C, 'N', 'C', A, B)
+Ac_mul_Bc!(C::CuMatrix{T}, A::CuMatrix{T}, B::CuMatrix{T}) where T<:CublasReal = At_mul_Bt!(C, A, B)
+Ac_mul_Bc!(C::CuMatrix, A::CuMatrix, B::CuMatrix) = gemm_wrapper!(C, 'C', 'C', A, B)
 
 function A_mul_B!(C::CuMatrix{T}, A::CuVecOrMat{T}, B::CuVecOrMat{T}) where T
     gemm_wrapper!(C, 'N', 'N', A, B)
