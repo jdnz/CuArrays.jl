@@ -16,6 +16,9 @@ include("reduction.jl")
 
 include("../deps/ext.jl")
 include("blas/BLAS.jl")
+if libcusolver ≠ nothing
+  include("cusolver/CuSolver.jl")
+end
 if libcudnn ≠ nothing
   include("cudnn/CUDNN.jl")
 end
