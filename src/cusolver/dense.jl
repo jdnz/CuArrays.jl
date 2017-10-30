@@ -172,14 +172,10 @@ for (bname, fname, elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSgeqrf, :
 end
 
 # ormqr 
-for (bname, fname,elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSormqr, :Float32),
-                            (:cusolverDnDgeqrf_bufferSize, :cusolverDnDormqr, :Float64),
-                            (:cusolverDnCgeqrf_bufferSize, :cusolverDnCunmqr, :Complex64),
-                            (:cusolverDnZgeqrf_bufferSize, :cusolverDnZunmqr, :Complex128))
-# for (bname, fname, elty) in ((:cusolverDnSormqr_bufferSize, :cusolverDnSormqr, :Float32),
-#                              (:cusolverDnDormqr_bufferSize, :cusolverDnDormqr, :Float64),
-#                              (:cusolverDnCurmqr_bufferSize, :cusolverDnCunmqr, :Complex64),
-#                              (:cusolverDnZurmqr_bufferSize, :cusolverDnZunmqr, :Complex128))
+for (bname, fname, elty) in ((:cusolverDnSormqr_bufferSize, :cusolverDnSormqr, :Float32),
+                             (:cusolverDnDormqr_bufferSize, :cusolverDnDormqr, :Float64),
+                             (:cusolverDnCurmqr_bufferSize, :cusolverDnCunmqr, :Complex64),
+                             (:cusolverDnZurmqr_bufferSize, :cusolverDnZunmqr, :Complex128))
     @eval begin
         function ormqr!(side::BlasChar,
                         trans::BlasChar,
@@ -193,17 +189,13 @@ for (bname, fname,elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSormqr, :F
             lda     = size(A, side == 'L' ? 1 : 2)
             ldc     = max(1,stride(C,2))
             bufSize = Ref{Cint}(0)
-            statuscheck(ccall(($(string(bname)), libcusolver), cusolverStatus_t,
-                             (cusolverDnHandle_t, Cint, Cint, Ptr{$elty}, Cint,
-                              Ref{Cint}), cusolverDnhandle[1], m, n, A,
-                             lda, bufSize))
-            # statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
-            #                    (cusolverDnHandle_t, cublasSideMode_t,
-            #                     cublasOperation_t, Cint, Cint, Cint, Ptr{$elty}, 
-            #                     Cint, Ptr{$elty}, Cint, Ref{Cint}),
-            #                    cusolverDnhandle[1], cuside,
-            #                    cutrans, m, n, k, A,
-            #                    lda, C, ldc, bufSize))
+            statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
+                               (cusolverDnHandle_t, cublasSideMode_t,
+                                cublasOperation_t, Cint, Cint, Cint, Ptr{$elty}, 
+                                Cint, Ptr{$elty}, Ptr{$elty}, Cint, Ref{Cint}),
+                               cusolverDnhandle[1], cuside,
+                               cutrans, m, n, k, A,
+                               lda, tau, C, ldc, bufSize))
             buffer  = CuArray(zeros($elty, bufSize[]))
             devinfo = CuArray(zeros(Cint, 1))
             statuscheck(ccall(($(string(fname)),libcusolver), cusolverStatus_t,
@@ -223,14 +215,10 @@ for (bname, fname,elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSormqr, :F
 end
 
 # orgqr 
-# for (bname, fname, elty) in ((:cusolverDnSorgqr_bufferSize, :cusolverDnSorgqr, :Float32),
-#                              (:cusolverDnDorgqr_bufferSize, :cusolverDnDorgqr, :Float64),
-#                              (:cusolverDnCungqr_bufferSize, :cusolverDnCungqr, :Complex64),
-#                              (:cusolverDnZungqr_bufferSize, :cusolverDnZungqr, :Complex128))
-for (bname, fname, elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSorgqr, :Float32),
-                             (:cusolverDnDgeqrf_bufferSize, :cusolverDnDorgqr, :Float64),
-                             (:cusolverDnCgeqrf_bufferSize, :cusolverDnCungqr, :Complex64),
-                             (:cusolverDnZgeqrf_bufferSize, :cusolverDnZungqr, :Complex128))
+for (bname, fname, elty) in ((:cusolverDnSorgqr_bufferSize, :cusolverDnSorgqr, :Float32),
+                             (:cusolverDnDorgqr_bufferSize, :cusolverDnDorgqr, :Float64),
+                             (:cusolverDnCungqr_bufferSize, :cusolverDnCungqr, :Complex64),
+                             (:cusolverDnZungqr_bufferSize, :cusolverDnZungqr, :Complex128))
     @eval begin
         function orgqr!(A::CuMatrix{$elty}, tau::CuVector{$elty})
             m, n = size(A)
@@ -238,14 +226,10 @@ for (bname, fname, elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSorgqr, :
             lda = max(1, stride(A, 2))
             k = length(tau)
             bufSize = Ref{Cint}(0)
-            statuscheck(ccall(($(string(bname)), libcusolver), cusolverStatus_t,
-                             (cusolverDnHandle_t, Cint, Cint, Ptr{$elty}, Cint,
-                              Ref{Cint}), cusolverDnhandle[1], m, n, A,
-                             lda, bufSize))
-            # statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
-            #                   (cusolverDnHandle_t, Cint, Cint, Ptr{$elty}, Cint,
-            #                    Ref{Cint}),
-            #                   cusolverDnhandle[1], m, n, k, A, lda, bufSize))
+            statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
+                               (cusolverDnHandle_t, Cint, Cint, Cint, Ptr{$elty}, Cint,
+                                Ptr{$elty}, Ref{Cint}),
+                               cusolverDnhandle[1], m, n, k, A, lda, tau, bufSize))
             buffer  = CuArray(zeros($elty, bufSize[]))
             devinfo = CuArray(zeros(Cint, 1))
             statuscheck(ccall(($(string(fname)), libcusolver), cusolverStatus_t,
@@ -256,7 +240,7 @@ for (bname, fname, elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSorgqr, :
             if devinfo[1] < 0
                 throw(ArgumentError("The $(devinfo[1])th parameter is wrong"))
             end
-            A
+            A[:,1:n]
         end
     end
 end
