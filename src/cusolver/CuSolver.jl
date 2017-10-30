@@ -3,7 +3,8 @@ module CuSolver
 import Base: one, zero
 using CUDAdrv
 using ..CuArrays: CuArray, CuVector, CuMatrix, CuVecOrMat, libcusolver
-using ..CuArrays.BLAS: cublasfill, cublasop, cublasside, cublasFillMode_t, cublasOperation_t, cublasSideMode_t
+using ..CuArrays.BLAS: cublasfill, cublasop, cublasside,
+    cublasFillMode_t, cublasOperation_t, cublasSideMode_t
 
 const BlasChar = Char
 
