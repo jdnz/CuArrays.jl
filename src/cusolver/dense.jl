@@ -147,18 +147,17 @@ for (bname, fname, elty) in ((:cusolverDnSgeqrf_bufferSize, :cusolverDnSgeqrf, :
                             (:cusolverDnZgeqrf_bufferSize, :cusolverDnZgeqrf, :Complex128))
     @eval begin
         function geqrf!(A::CuMatrix{$elty})
-            m,n = size(A)
-            lda = max(1,stride(A,2))
+            m, n = size(A)
+            lda = max(1, stride(A, 2))
             bufSize = Ref{Cint}(0)
-            statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
+            statuscheck(ccall(($(string(bname)), libcusolver), cusolverStatus_t,
                               (cusolverDnHandle_t, Cint, Cint, Ptr{$elty}, Cint,
                                Ref{Cint}), cusolverDnhandle[1], m, n, A,
                               lda, bufSize))
-
             buffer  = CuArray(zeros($elty, bufSize[]))
             tau  = CuArray(zeros($elty, min(m, n)))
             devinfo = CuArray(zeros(Cint, 1))
-            statuscheck(ccall(($(string(fname)),libcusolver), cusolverStatus_t,
+            statuscheck(ccall(($(string(fname)), libcusolver), cusolverStatus_t,
                               (cusolverDnHandle_t, Cint, Cint, Ptr{$elty},
                                Cint, Ptr{$elty}, Ptr{$elty}, Cint, Ptr{Cint}),
                               cusolverDnhandle[1], m, n, A, lda, tau, buffer,
@@ -184,10 +183,59 @@ for (bname, fname, elty) in ((:cusolverDnSormqr_bufferSize, :cusolverDnSormqr, :
                         C::CuVecOrMat{$elty})
             cuside  = cublasside(side)
             cutrans = cublasop(trans)
-            m, n    = size(A)
+            if side == 'L'
+              m = size(A, 1)
+              ldc, n = size(C)
+              if m > ldc
+                C = [C; zeros(m - ldc, n)]
+                ldc = m
+              end
+              lda = m
+            else
+              m = size(C, 1)
+              ldc = m
+              n = size(A, 1)
+              lda = n
+            end
             k       = length(tau)
-            lda     = size(A, side == 'L' ? 1 : 2)
-            ldc     = max(1,stride(C,2))
+            bufSize = Ref{Cint}(0)
+            statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
+                               (cusolverDnHandle_t, cublasSideMode_t,
+                                cublasOperation_t, Cint, Cint, Cint, Ptr{$elty}, 
+                                Cint, Ptr{$elty}, Ptr{$elty}, Cint, Ref{Cint}),
+                               cusolverDnhandle[1], cuside,
+                               cutrans, m, n, k, A,
+                               lda, tau, C, ldc, bufSize))
+            buffer  = CuArray(zeros($elty, bufSize[]))
+            devinfo = CuArray(zeros(Cint, 1))
+            statuscheck(ccall(($(string(fname)),libcusolver), cusolverStatus_t,
+                              (cusolverDnHandle_t, cublasSideMode_t,
+                               cublasOperation_t, Cint, Cint, Cint, Ptr{$elty},
+                               Cint, Ptr{$elty}, Ptr{$elty}, Cint, Ptr{$elty},
+                               Cint, Ptr{Cint}),
+                              cusolverDnhandle[1], cuside,
+                              cutrans, m, n, k, A, lda, tau, C, ldc, buffer,
+                              bufSize[], devinfo))
+            if devinfo[1] < 0
+                throw(ArgumentError("The $(devinfo[1])th parameter is wrong"))
+            end
+            return side == 'L' ? C[:, 1:min(size(A))] : C
+        end
+    end
+end
+# ormqr 
+for (bname, fname, elty) in ((:cusolverDnSormqr_bufferSize, :cusolverDnSormqr, :Float32),
+                             (:cusolverDnDormqr_bufferSize, :cusolverDnDormqr, :Float64),
+                             (:cusolverDnCurmqr_bufferSize, :cusolverDnCunmqr, :Complex64),
+                             (:cusolverDnZurmqr_bufferSize, :cusolverDnZunmqr, :Complex128))
+    @eval begin
+        function ormqr_test!(side::BlasChar,
+                        trans::BlasChar,
+                        A::CuMatrix{$elty},
+                        tau::CuVector{$elty},
+                        C::CuVecOrMat{$elty},m,n,k,lda,ldc)
+            cuside  = cublasside(side)
+            cutrans = cublasop(trans)
             bufSize = Ref{Cint}(0)
             statuscheck(ccall(($(string(bname)),libcusolver), cusolverStatus_t,
                                (cusolverDnHandle_t, cublasSideMode_t,
